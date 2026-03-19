@@ -1,0 +1,35 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) session_start();
+
+$message = '';
+$success = false;
+
+function generateCaptchaCode(): string {
+    $chars = '23456789abcdefghjkmnpqrstuvwxyz';
+    $code  = '';
+    for ($i = 0; $i < 5; $i++) {
+        $code .= $chars[random_int(0, strlen($chars) - 1)];
+    }
+    return $code;
+}
+
+if (isset($_GET['new']) && $_GET['new'] === '1') {
+    $_SESSION['captcha_code'] = generateCaptchaCode();
+    header('Location: task_07.php'); exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['captcha_input'])) {
+    $input    = trim($_POST['captcha_input'] ?? '');
+    $expected = $_SESSION['captcha_code'] ?? '';
+    unset($_SESSION['captcha_code']);
+    if ($input !== '' && $expected !== '' && $input === $expected) {
+        $success = true; $message = 'Верно!';
+    } else {
+        $message = 'Неверный код.';
+    }
+    $_SESSION['captcha_code'] = generateCaptchaCode();
+}
+
+if (!isset($_SESSION['captcha_code'])) {
+    $_SESSION['captcha_code'] = generateCaptchaCode();
+}
